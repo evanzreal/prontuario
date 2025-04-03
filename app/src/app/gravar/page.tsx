@@ -196,9 +196,9 @@ export default function GravarPage() {
       setResponseUrl(null);
       toast.success('Gravação iniciada');
       
-    } catch (error: RecordingError) {
+    } catch (error: unknown) {
       console.error('Erro ao iniciar gravação:', error);
-      if (!error.message.includes('Permission')) {
+      if (error instanceof Error && !error.message.includes('Permission')) {
         toast.error('Erro ao iniciar gravação. Tente novamente.');
       }
     }
