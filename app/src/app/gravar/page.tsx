@@ -39,6 +39,12 @@ interface WebhookData {
   audio: AudioData;
 }
 
+// Interface para erros de usuário
+interface RecordingError extends Error {
+  name: string;
+  message: string;
+}
+
 export default function GravarPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -97,7 +103,7 @@ export default function GravarPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: true,
         video: false 
-      }).catch((err) => {
+      }).catch((err: RecordingError) => {
         console.error('Erro ao solicitar microfone:', err);
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           setError('Permissão para o microfone negada. Por favor, permita o acesso ao microfone nas configurações do seu navegador.');
@@ -190,7 +196,7 @@ export default function GravarPage() {
       setResponseUrl(null);
       toast.success('Gravação iniciada');
       
-    } catch (error: any) {
+    } catch (error: RecordingError) {
       console.error('Erro ao iniciar gravação:', error);
       if (!error.message.includes('Permission')) {
         toast.error('Erro ao iniciar gravação. Tente novamente.');
