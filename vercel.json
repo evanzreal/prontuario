@@ -14,5 +14,8 @@
   ],
   "env": {
     "NEXT_PUBLIC_ROOT_DIR": "app"
-  }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/src/app/$1" }
+  ]
 } 
