@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
+import dynamic from "next/dynamic";
 
 interface AudioData {
   ptt: boolean;
@@ -44,7 +45,17 @@ interface RecordingError extends Error {
   message: string;
 }
 
-export default function GravarPage() {
+// Utilizando dynamic import para garantir que o componente só seja renderizado no cliente
+const GravarPageClient = dynamic(() => Promise.resolve(GravarPage), {
+  ssr: false,
+});
+
+// Componente wrapper para exportar
+export default function GravarPageWrapper() {
+  return <GravarPageClient />;
+}
+
+function GravarPage() {
   const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
   const [audioData, setAudioData] = useState<AudioData | null>(null);
@@ -60,8 +71,14 @@ export default function GravarPage() {
 
   useEffect(() => {
     // Verificar se o navegador suporta MediaRecorder
-    if (typeof window !== 'undefined' && !navigator?.mediaDevices?.getUserMedia) {
-      setError('Seu navegador não suporta gravação de áudio. Tente usar um navegador mais recente como Chrome ou Firefox.');
+    if (typeof window !== 'undefined') {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        setError('Seu navegador não suporta gravação de áudio. Tente usar um navegador mais recente como Chrome ou Firefox.');
+      }
+
+      if (typeof MediaRecorder === 'undefined') {
+        setError('Seu navegador não suporta a API MediaRecorder. Tente usar um navegador mais recente.');
+      }
     }
   }, []);
 
@@ -92,6 +109,11 @@ export default function GravarPage() {
       setError(null);
       console.log('Solicitando permissão de microfone...');
       
+      // Verificar se estamos no navegador e se a API está disponível
+      if (typeof window === 'undefined' || !navigator?.mediaDevices?.getUserMedia) {
+        throw new Error('API de gravação não disponível neste navegador.');
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: true,
         video: false 
@@ -113,7 +135,7 @@ export default function GravarPage() {
       let mimeType = 'audio/webm;codecs=opus';
       
       // Verificando suporte ao formato
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
+      if (typeof MediaRecorder !== 'undefined' && !MediaRecorder.isTypeSupported(mimeType)) {
         console.warn('Formato audio/webm;codecs=opus não suportado, usando padrão');
         mimeType = '';
       }
@@ -225,39 +247,67 @@ export default function GravarPage() {
   };
 
   const sendToWebhook = async () => {
-    if (!webhookData) return;
+    if (!webhookData || !audioData) return;
     
     setIsSending(true);
     
     try {
       const webhookUrl = "https://primary-production-c25e.up.railway.app/webhook/0294d352-d534-499d-a2a0-355c8abab879";
       
-      console.log('Enviando para webhook:', webhookUrl);
-      console.log('Dados:', JSON.stringify([webhookData]));
+      // Criar um FormData para enviar o arquivo
+      const formData = new FormData();
       
-      // Enviando o JSON completo para o webhook
-      const response = await fetch(webhookUrl, {
+      // Criar o arquivo de áudio a partir dos chunks
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/ogg; codecs=opus' });
+      const audioFile = new File([audioBlob], 'audio.ogg', { type: 'audio/ogg; codecs=opus' });
+      
+      // Adicionar o arquivo ao FormData com o nome 'data' que o n8n espera
+      formData.append('data', audioFile);
+      
+      // Adicionar os metadados do webhook
+      formData.append('json', JSON.stringify({
+        isStatusReply: false,
+        chatLid: webhookData.chatLid,
+        connectedPhone: webhookData.connectedPhone,
+        waitingMessage: false,
+        isEdit: false,
+        isGroup: false,
+        isNewsletter: false,
+        instanceId: webhookData.instanceId,
+        messageId: webhookData.messageId,
+        phone: webhookData.phone,
+        fromMe: true,
+        momment: Date.now(),
+        status: "SENT",
+        chatName: webhookData.chatName,
+        senderName: webhookData.senderName,
+        type: "ReceivedCallback"
+      }));
+      
+      console.log('Enviando para webhook:', webhookUrl);
+      
+      // Enviando o FormData para o webhook
+      const webhookResponse = await fetch(webhookUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([webhookData]),
+        body: formData
       });
       
-      const responseData = await response.json();
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error('Erro do servidor:', errorText);
+        throw new Error(`Erro do servidor: ${webhookResponse.status} - ${errorText}`);
+      }
+
+      const responseData = await webhookResponse.json();
       console.log('Response from webhook:', responseData);
       
-      if (response.ok) {
-        toast.success('Áudio enviado com sucesso!');
-        if (responseData && responseData.redirectUrl) {
-          setResponseUrl(responseData.redirectUrl);
-        }
-      } else {
-        toast.error('Erro ao enviar áudio');
+      toast.success('Áudio enviado com sucesso!');
+      if (responseData && responseData.redirectUrl) {
+        setResponseUrl(responseData.redirectUrl);
       }
     } catch (error) {
       console.error('Erro ao enviar para o webhook:', error);
-      toast.error('Falha na comunicação com o servidor');
+      toast.error(`Falha na comunicação com o servidor: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setIsSending(false);
     }
@@ -328,12 +378,6 @@ export default function GravarPage() {
             </div>
             <div className="flex justify-between gap-2">
               <button 
-                onClick={restartRecording}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition flex-1"
-              >
-                Regravar
-              </button>
-              <button 
                 onClick={handleDownload}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition flex-1"
               >
@@ -349,28 +393,6 @@ export default function GravarPage() {
                 {isSending ? 'Enviando...' : 'Enviar'}
               </button>
             </div>
-          </div>
-
-          {responseUrl && (
-            <div className="mt-4 border rounded-lg p-4 bg-white shadow">
-              <h3 className="font-medium mb-2">Resposta Recebida</h3>
-              <p className="text-sm">Prossiga para:</p>
-              <a 
-                href={responseUrl} 
-                className="text-blue-500 underline block mt-1 break-words"
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                {responseUrl}
-              </a>
-            </div>
-          )}
-
-          <div className="mt-4 border rounded-lg p-4 bg-white shadow">
-            <h3 className="font-medium mb-2">Formato do Webhook</h3>
-            <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-64">
-              {JSON.stringify(webhookData, null, 2)}
-            </pre>
           </div>
         </div>
       ) : (
@@ -392,6 +414,21 @@ export default function GravarPage() {
             />
           </svg>
         </button>
+      )}
+
+      {responseUrl && (
+        <div className="mt-4 border rounded-lg p-4 bg-white shadow">
+          <h3 className="font-medium mb-2">Resposta Recebida</h3>
+          <p className="text-sm">Prossiga para:</p>
+          <a 
+            href={responseUrl} 
+            className="text-blue-500 underline block mt-1 break-words"
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
+            {responseUrl}
+          </a>
+        </div>
       )}
     </div>
   );
