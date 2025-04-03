@@ -1,0 +1,58 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Regras e Boas Práticas para PWAs Mobile
+
+## Configuração do Manifesto
+- Defina `display: standalone` ou `fullscreen` para experiência app-like
+- Configure ícones em múltiplos tamanhos (192px, 512px, maskable)
+- Defina cores de tema e fundo adequadas para a identidade visual
+- Inclua descrição curta e nome curto para ícones de tela inicial
+
+## Service Worker
+- Implemente estratégia de cache offline-first
+- Cache recursos essenciais na instalação
+- Atualize o cache quando houver novas versões
+- Gerencie tamanho do cache para evitar uso excessivo de armazenamento
+
+## Responsividade
+- Use `viewport-fit=cover` e considere a área segura para notches
+- Implemente media queries para diferentes tamanhos de tela
+- Adote unidades relativas (rem, vh, vw) em vez de pixels fixos
+- Teste em diferentes dispositivos e orientações
+
+## Performance
+- Otimize imagens (WebP, compressão adequada)
+- Minimize JS e CSS, use code-splitting
+- Implemente lazy loading para conteúdo abaixo da dobra
+- Mantenha o bundle inicial abaixo de 150KB (comprimido)
+- Use Intersection Observer para carregar conteúdo conforme necessário
+
+## UX Mobile
+- Botões e áreas clicáveis com mínimo de 44x44px
+- Espaçamento adequado entre elementos interativos
+- Feedback tátil para interações (ripple effect)
+- Suporte a gestos comuns (swipe, pinch)
+- Evite hover como único indicador de interatividade
+
+## Acessibilidade
+- Contraste adequado (WCAG AA no mínimo)
+- Suporte a zoom e texto redimensionável
+- Elementos interativos acessíveis por teclado
+- Use ARIA quando necessário
+- Teste com leitores de tela
+
+## Otimizações Específicas
+- Implemente pull-to-refresh para atualização de conteúdo
+- Considere o modo escuro baseado nas preferências do sistema
+- Otimize para conexões instáveis com indicadores de estado
+- Implemente notificações push com permissões adequadas
+- Suporte a compartilhamento nativo via Web Share API
+
+## Vercel Específico
+- Configure corretamente os headers para cache de service worker
+- Use a integração de análise da Vercel para monitorar performance
+- Configure redirecionamentos para URLs antigas se necessário
+- Aproveite o Edge Network da Vercel para entrega rápida
