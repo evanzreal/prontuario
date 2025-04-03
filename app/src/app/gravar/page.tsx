@@ -64,6 +64,7 @@ function GravarPage() {
   const [isSending, setIsSending] = useState(false);
   const [responseUrl, setResponseUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [transcricao, setTranscricao] = useState<string>('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -252,7 +253,7 @@ function GravarPage() {
     setIsSending(true);
     
     try {
-      const webhookUrl = "https://primary-production-c25e.up.railway.app/webhook/0294d352-d534-499d-a2a0-355c8abab879";
+      const webhookUrl = "/api/webhook";
       
       // Criar um FormData para enviar o arquivo
       const formData = new FormData();
@@ -308,6 +309,9 @@ function GravarPage() {
       toast.success('Áudio enviado com sucesso!');
       if (responseData && responseData.redirectUrl) {
         setResponseUrl(responseData.redirectUrl);
+      }
+      if (responseData && responseData.transcricao) {
+        setTranscricao(responseData.transcricao);
       }
     } catch (error) {
       console.error('Erro ao enviar para o webhook:', error);
@@ -432,6 +436,20 @@ function GravarPage() {
           >
             {responseUrl}
           </a>
+        </div>
+      )}
+
+      {transcricao && (
+        <div className="mt-4 w-full max-w-md">
+          <div className="border rounded-lg p-4 bg-white shadow">
+            <h3 className="font-medium mb-2">Transcrição do Áudio</h3>
+            <textarea
+              className="w-full h-32 p-2 border rounded-md bg-gray-50"
+              value={transcricao}
+              readOnly
+              placeholder="A transcrição aparecerá aqui..."
+            />
+          </div>
         </div>
       )}
     </div>
