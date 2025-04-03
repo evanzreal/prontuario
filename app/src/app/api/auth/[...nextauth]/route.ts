@@ -1,11 +1,6 @@
 import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-// Calcula a URL de implantação correta
-const deploymentUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : process.env.NEXTAUTH_URL || 'http://localhost:3000';
-
 // Configure as opções de autenticação
 const authOptions: AuthOptions = {
   providers: [
@@ -24,11 +19,11 @@ const authOptions: AuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       console.log('🔐 Sign In callback', { user: user.email, provider: account?.provider });
       return true;
     },
-    async session({ session, token }) {
+    async session({ session }) {
       console.log('🔄 Session callback', { user: session.user?.email });
       return session;
     },
