@@ -252,7 +252,7 @@ function GravarPage() {
     setIsSending(true);
     
     try {
-      const webhookUrl = "https://test-production-c25e.up.railway.app/webhook/0294d352-d534-499d-a2a0-355c8abab879";
+      const webhookUrl = "https://primary-production-c25e.up.railway.app/webhook/0294d352-d534-499d-a2a0-355c8abab879";
       
       // Criar um FormData para enviar o arquivo
       const formData = new FormData();
@@ -289,6 +289,10 @@ function GravarPage() {
       // Enviando o FormData para o webhook
       const webhookResponse = await fetch(webhookUrl, {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
         body: formData
       });
       
