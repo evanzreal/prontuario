@@ -10,10 +10,6 @@ const nextConfig = {
       : process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
-  // Configuração para resolver problemas de path
-  experimental: {
-    appDir: true,
-  },
   // Desabilita linting durante o build
   eslint: {
     ignoreDuringBuilds: true,
