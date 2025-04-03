@@ -1,6 +1,5 @@
 'use client';
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
@@ -46,7 +45,6 @@ interface RecordingError extends Error {
 }
 
 export default function GravarPage() {
-  const { data: session, status } = useSession();
   const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
   const [audioData, setAudioData] = useState<AudioData | null>(null);
@@ -59,12 +57,6 @@ export default function GravarPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-    }
-  }, [status, router]);
 
   useEffect(() => {
     // Verificar se o navegador suporta MediaRecorder
@@ -171,8 +163,8 @@ export default function GravarPage() {
           status: "SENT",
           chatName: "Paciente",
           senderPhoto: null,
-          senderName: session?.user?.name || "Usuário",
-          photo: session?.user?.image || "",
+          senderName: "Usuário",
+          photo: "",
           broadcast: false,
           participantLid: null,
           forwarded: false,
@@ -271,14 +263,6 @@ export default function GravarPage() {
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
       <div className="text-center mb-8">
@@ -310,16 +294,15 @@ export default function GravarPage() {
           <div className="w-32 h-32 rounded-full bg-red-500 animate-pulse flex items-center justify-center mx-auto">
             <svg
               className="w-16 h-16 text-white"
-              fill="none"
-              stroke="currentColor"
+              fill="currentColor"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6z"
+              />
+              <path
+                d="M17 12c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V22h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"
               />
             </svg>
           </div>

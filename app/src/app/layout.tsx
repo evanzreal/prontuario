@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
-import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,12 +46,10 @@ export default function RootLayout({
         </Script>
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
-        <Providers>
-          <main className="max-w-md mx-auto px-4 py-8">
-            {children}
-          </main>
-          <Toaster position="top-center" />
-        </Providers>
+        <main className="max-w-md mx-auto px-4 py-8">
+          {children}
+        </main>
+        <Toaster position="top-center" />
       </body>
     </html>
   );
