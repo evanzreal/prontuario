@@ -1,6 +1,11 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+// Configuração para ambiente de produção
+const deploymentUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : process.env.NEXTAUTH_URL || 'http://localhost:3000';
+
 const handler = NextAuth({
   providers: [
     GoogleProvider({
@@ -10,6 +15,7 @@ const handler = NextAuth({
   ],
   pages: {
     signIn: "/",
+    error: "/",
   },
   callbacks: {
     async session({ session }) {
