@@ -10,22 +10,6 @@ const nextConfig = {
       : process.env.NEXTAUTH_URL,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
-  async redirects() {
-    return [
-      {
-        source: '/api/auth/:path*',
-        has: [
-          {
-            type: 'header',
-            key: 'referer',
-            value: '(.*)',
-          },
-        ],
-        destination: '/api/auth/:path*',
-        permanent: true,
-      },
-    ]
-  },
   async headers() {
     return [
       {
