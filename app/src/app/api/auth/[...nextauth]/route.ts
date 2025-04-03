@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-// Configuração para ambiente de produção
+// Calcula a URL de implantação correta
 const deploymentUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -27,6 +27,15 @@ const handler = NextAuth({
       }
       return token;
     },
+    async redirect({ url, baseUrl }) {
+      // Garante que a URL de redirecionamento seja válida
+      if (url.startsWith('/')) {
+        return `${deploymentUrl}${url}`;
+      } else if (new URL(url).origin === baseUrl) {
+        return url;
+      }
+      return baseUrl;
+    }
   },
   secret: process.env.NEXTAUTH_SECRET,
 });
